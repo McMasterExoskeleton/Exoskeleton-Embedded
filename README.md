@@ -1,5 +1,5 @@
 # Exoskeleton-Embedded
-Main Repo for McMaster Exoskeleton Embedded Software
+Main Repo for McMaster Exoskeleton Embedded Software  
 
 ## Modules
 
@@ -11,4 +11,10 @@ Submodule responsible for integrating the gait prediction from the model and set
 
 ### Motor Control
 Submodule responsible for taking the new setpoint of the system and controlling the motors into the desired position
+
+## Contributing
+Contributing guidelines can be seen [here](docs/contributing.md)
+
+
+
 
