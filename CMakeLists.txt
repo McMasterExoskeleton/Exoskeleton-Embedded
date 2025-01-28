@@ -5,22 +5,17 @@ project(MyProject)
 set(CMAKE_CXX_STANDARD 17)
 
 # Add source files
-add_library(MyLibrary src/my_library.cpp)
+# add_library(MyLibrary src/my_library.cpp)
 
 # Include GoogleTest
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/release-1.12.1.zip
-)
-FetchContent_MakeAvailable(googletest)
+add_subdirectory(googletest)
 
 # Enable testing
 enable_testing()
 
 # Add unit tests
-add_executable(MyLibraryTest tests/my_library_test.cpp)
-target_link_libraries(MyLibraryTest PRIVATE MyLibrary gtest gtest_main)
+add_executable(sampleTest tests/sample_test.cpp)
+target_link_libraries(sampleTest PRIVATE gtest gtest_main)
 
 # Register the test with CTest
-add_test(NAME MyLibraryTest COMMAND MyLibraryTest)
+add_test(NAME sampleTest COMMAND sampleTest)
