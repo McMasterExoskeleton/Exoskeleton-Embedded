@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - googletest-framework
+      - sensor-logging-feature
   pull_request:
     branches:
       - main
       - googletest-framework
+      - sensor-logging-feature
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
