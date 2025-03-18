@@ -36,7 +36,7 @@ void initializeMotor(Motor *motor) {
     }
     printf("Connected to motor on %s (ID: %d)\n", motor->device, motor->slave_id);
 
-    // Now write motor control registers
+    //write to registers
     write_register(motor->ctx, 0x6600, 0x04, "Profile Torque Mode");
     write_register(motor->ctx, 0x6720, 0x0BB8, "Max Torque (3000‰)"); // values found from documentation
     write_register(motor->ctx, 0x6710, 0x0064 , "Target Torque (100‰)");// set to 100%
@@ -84,9 +84,10 @@ int main() {
     const uint16_t REG_ADDR_TGT_TORQUE = 0x6710; 
     const uint16_t REG_ADDR_CNTRL_WORD = 0x6400; 
 
+
     // Initialize Modbus connections for each motor
     for (auto &motor : motors) {
-        motor.ctx = init_modbus(motor.device.c_str(), motor.slave_id);
+        initializeMotor(&motor); //new function call (initialzeMotor, not init_modbus)
         if (motor.ctx == nullptr) {
             std::cerr << "Skipping " << motor.device << " due to connection failure.\n";
         }
