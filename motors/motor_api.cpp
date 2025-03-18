@@ -14,34 +14,34 @@
 #include <thread>
 #include <vector>
 
-// Initialize Modbus RTU connection
-modbus_t* init_modbus(const char* device, int slave_id) {
 
-    // DEBUGGING
-    // According to the user manual, the motor expects the data format to have an even parity
-    // Old code used     : 'N' (No parity)
-    // New code will use : 'E' (Even parity)
-    modbus_t *ctx = modbus_new_rtu(device, 115200, 'E', 8, 1);
-    if (ctx == nullptr) {
-        std::cerr << "Unable to create libmodbus context for " << device << "\n";
-        return nullptr;
-    }
 
-    // DEBUGGING
-    // Use slave_id: 0 instead of 1 (sends commands to ALL connected devices instead of a specific one, think of this as a broadcast address)
-    // new code: modbus_set_slave(ctx, 0)
-    if (modbus_set_slave(ctx, slave_id) == -1) {
-        std::cerr << "Invalid slave ID for " << device << "\n";
-        modbus_free(ctx);
-        return nullptr;
+//initializeMotor 
+void initializeMotor(Motor *motor) {
+    // Initialize Modbus connection 
+    motor->ctx = modbus_new_rtu(motor->device, 115200, 'E', 8, 1);
+    if (motor->ctx == NULL) {
+        fprintf(stderr, "Unable to create libmodbus context for %s\n", motor->device);
+        return;
     }
-    if (modbus_connect(ctx) == -1) {
-        std::cerr << "Connection failed for " << device << ": " << modbus_strerror(errno) << "\n";
-        modbus_free(ctx);
-        return nullptr;
+    if (modbus_set_slave(motor->ctx, motor->slave_id) == -1) {
+        fprintf(stderr, "Invalid slave ID for %s\n", motor->device);
+        modbus_free(motor->ctx);
+        return;
     }
-    std::cout << "Connected to motor on " << device << " (ID: " << slave_id << ")\n";
-    return ctx;
+    if (modbus_connect(motor->ctx) == -1) {
+        fprintf(stderr, "Connection failed for %s: %s\n", motor->device, modbus_strerror(errno));
+        modbus_free(motor->ctx);
+        return;
+    }
+    printf("Connected to motor on %s (ID: %d)\n", motor->device, motor->slave_id);
+
+    // Now write motor control registers
+    write_register(motor->ctx, 0x6600, 0x04, "Profile Torque Mode");
+    write_register(motor->ctx, 0x6720, 0x0BB8, "Max Torque (3000‰)"); // values found from documentation
+    write_register(motor->ctx, 0x6710, 0x0064 , "Target Torque (100‰)");// set to 100%
+    write_register(motor->ctx, 0x6400, 0x0006, "Motor Shutdown");
+    write_register(motor->ctx, 0x6400, 0x000F, "On/off Operation");
 }
 
 // Function to write a Modbus register
