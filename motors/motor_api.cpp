@@ -7,7 +7,6 @@
  *    - Most commonly used library for modbus RTU in C/C++.
  *    - Amazing Reference guide 
 */
-
 #include "motor_api.h"
 
 
