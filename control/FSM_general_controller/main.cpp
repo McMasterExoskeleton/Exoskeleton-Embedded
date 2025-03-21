@@ -20,12 +20,16 @@ int main(int argc, char **argv)
   double max_sensor_reading = 0;
   double min_sensor_reading = 0;
 
+  /*
+
   cout << "\n\nInput maximum sensor reading (currently not used for state transitions)\n";
   cin >> max_sensor_reading;
   cout << "\n\n";
   cout << "Input minimum sensor reading (currently not used for state transitions)\n";
   cin >> min_sensor_reading;
   cout << "\n\n";
+
+  */
 
   cout << "Type 1 or 2 to change states (to exit program type 3) \n\n";
 
