@@ -18,6 +18,8 @@ const uint16_t REG_TARGET_TORQUE   = 0x6710;
 const uint16_t REG_CONTROL_WORD    = 0x6400;
 const uint16_t REG_TARGET_SPEED    = 0x6FF0;
 
+const uint16_t REG_ACTUAL_TORQUE   = 0X6770;
+
 const uint16_t OPERATION_ENABLE    = 0x000F;
 const uint16_t OPERATION_DISABLE   = 0x0006;
 
@@ -82,6 +84,11 @@ bool Motor::setSpeed(int speed) {
 // Set motor torque
 bool Motor::setTorque(int torque) {
     return writeRegister(REG_TARGET_TORQUE, static_cast<uint16_t>(torque));
+}
+
+// Get motor torque
+int Motor::getActualTorque() {
+    return readRegister(REG_ACTUAL_TORQUE);
 }
 
 // Set max motor torque
