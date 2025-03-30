@@ -17,9 +17,11 @@ const uint16_t REG_TRQ_SLOPE       = 0x6870;
 const uint16_t REG_TARGET_TORQUE   = 0x6710; 
 const uint16_t REG_CONTROL_WORD    = 0x6400;
 const uint16_t REG_TARGET_SPEED    = 0x6FF0;
+const uint16_t REG_TARGET_POSITION = 0x67A0;
 
 const uint16_t REG_ACTUAL_TORQUE   = 0x6770;
 const uint16_t REG_ACTUAL_SPEED    = 0x66C0;
+const uint16_t REG_ACTUAL_POSITION = 0x67A0;
 
 
 const uint16_t OPERATION_ENABLE    = 0x000F;
@@ -76,6 +78,37 @@ int Motor::readRegister(uint16_t reg) {
         return -1;
     }
     return value;
+}
+
+// Write to a register of data type INT32
+bool Motor::writeRegister32(uint16_t start_addr, int32_t value) {
+    if (!connected) return -1;
+    uint16_t regs[2] = {
+        static_cast<uint16_t>(value & 0xFFFF),
+        static_cast<uint16_t>((value >> 16) & 0xFFFF)
+    };
+    return modbus_write_registers(ctx, start_addr, 2, regs) == 2;
+}
+
+// Read a register of data ype INT32
+int32_t Motor::readRegister32(uint16_t start_addr) {
+    if (!connected) return -1;
+    uint16_t regs[2];
+    if (modbus_read_registers(ctx, start_addr, 2, regs) != 2) {
+        std::cerr << "Failed to read 32-bit register: " << modbus_strerror(errno) << "\n";
+        return -1;
+    }
+    return (static_cast<int32_t>(regs[1]) << 16) | regs[0];
+}
+
+// Set motor position
+bool Motor::setPosition(int32_t position) {
+    return writeRegister32(REG_TARGET_POSITION, position);
+}
+
+// Get actual motor position
+int32_t Motor::getActualPosition() {
+    return readRegister32(REG_ACTUAL_POSITION);
 }
 
 // Set motor speed
