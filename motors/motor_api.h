@@ -16,7 +16,9 @@ public:
 
     // Control functions
     bool setSpeed(int speed);
+    int  getActualSpeed()
     bool setTorque(int torque);
+    int  getActualTorque()
     bool setMaxTorque(int torque);
     bool setOperationMode(int16_t mode);
     bool stopMotor();
