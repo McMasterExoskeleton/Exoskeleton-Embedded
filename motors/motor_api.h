@@ -5,33 +5,62 @@
 #include <iostream>
 #include <vector>
 
+// ─────────────────────────────────────────────────────────────
+// Control Modes
+constexpr int16_t PP_MODE = 1;  // Profile Position
+constexpr int16_t PV_MODE = 3;  // Profile Velocity
+constexpr int16_t PT_MODE = 4;  // Profile Torque
+
+// ─────────────────────────────────────────────────────────────
+// Control Words
+constexpr uint16_t OPERATION_ENABLE  = 0x000F;
+constexpr uint16_t OPERATION_DISABLE = 0x0006;
+
+// ─────────────────────────────────────────────────────────────
+// Modbus Register Addresses
+constexpr uint16_t REG_OP_MODE          = 0x6600;
+constexpr uint16_t REG_CONTROL_WORD     = 0x6400;
+
+constexpr uint16_t REG_TARGET_TORQUE    = 0x6710;
+constexpr uint16_t REG_TARGET_VELOCITY  = 0x6FF0;
+constexpr uint16_t REG_TARGET_POSITION  = 0x67A0;
+
+constexpr uint16_t REG_MAX_TORQUE       = 0x6720;
+constexpr uint16_t REG_TRQ_SLOPE        = 0x6870;
+
+constexpr uint16_t REG_ACTUAL_TORQUE    = 0x6770;
+constexpr uint16_t REG_ACTUAL_VELOCITY  = 0x66C0;
+constexpr uint16_t REG_ACTUAL_POSITION  = 0x6640;
+
+// ─────────────────────────────────────────────────────────────
+// Motor Class
 class Motor {
 public:
-    // Constructor
+    // Constructor / Destructor
     Motor(const std::string& device, int slave_id);
-    
-    // Initialization and connection
+    ~Motor();
+
+    // Initialization
     bool initializeMotor();
     void disconnectMotor();
 
-    // Control functions
-    bool setPosition(int32_t position);
-    int32_t getActualPosition();
-
-    bool setSpeed(int speed);
-    int  getActualSpeed()
-
-    bool setTorque(int torque);
-    int  getActualTorque()
-    bool setMaxTorque(int torque);
-    
+    // Motor Control
     bool setOperationMode(int16_t mode);
     bool stopMotor();
-    
-    // Error handling
-    int getStatus();
 
-    ~Motor(); // Destructor to clean up
+    bool setMaxTorque(int torque);
+    bool setTargetTorque(int16_t torque_permille);
+    uint16_t  getActualTorque();
+
+    bool setTargetVelocity(int32_t velocity);
+    int32_t getActualVelocity();
+
+    bool setPosition(int32_t position);
+    int32_t n();
+
+    // Status
+    int getStatus();
+    bool isConnected() const { return connected; }
 
 private:
     std::string device;
@@ -39,11 +68,13 @@ private:
     modbus_t* ctx;
     bool connected;
 
-    // Private helper functions
+    // Register Access Helpers
     bool writeRegister(uint16_t reg, uint16_t value);
+    bool  readRegister(uint16_t reg);
+
+    // For 32-bit register access
     bool writeRegister32(uint16_t start_addr, int32_t value);
-    int readRegister(uint16_t reg);
-    int32_t readRegister32(uint16_t start_addr);
+    bool readRegister32(uint16_t start_addr);
 };
 
 #endif // MOTOR_API_H
