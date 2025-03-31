@@ -1,17 +1,20 @@
-#include "kalman_filter.h"
+#include "one_d_kalman_filter.h"
+#include "low_pass_filter.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <unordered_map>
+#include <array>
 #include <nlohmann/json.hpp>
+#include <Eigen/Dense>
 
 using json = nlohmann::json;
 
 // Structure to hold IMU data
 struct IMUData {
     std::string timestamp;
-    std::string location; // Track sensor location
-    Eigen::VectorXd measurement;
+    std::string location;
+    Eigen::VectorXd measurement;  // heading, pitch, roll
 };
 
 // Read IMU data from JSON file
@@ -28,14 +31,13 @@ std::vector<IMUData> read_imu_data(const std::string &filename) {
     while (std::getline(file, line)) {
         try {
             json entry = json::parse(line);
-            std::string timestamp = entry["timestamp"]; // Keep timestamp as string
+            std::string timestamp = entry["timestamp"];
 
-            for (auto &sensor : entry["sensors"]) {
+            for (const auto &sensor : entry["sensors"]) {
                 IMUData data;
                 data.timestamp = timestamp;
-                data.location = sensor["location"]; // Store sensor location
+                data.location = sensor["location"];
 
-                // Store Euler angles in a vector
                 data.measurement = Eigen::VectorXd(3);
                 data.measurement << sensor["euler"]["heading"],
                                     sensor["euler"]["pitch"],
@@ -48,42 +50,41 @@ std::vector<IMUData> read_imu_data(const std::string &filename) {
             continue;
         }
     }
+
     return imu_data;
 }
 
-// Apply Kalman filter to IMU data (per sensor location)
+// Apply 1D Kalman filter per Euler component and sensor
 void apply_kalman_filter(std::vector<IMUData> &imu_data) {
-    std::unordered_map<std::string, KalmanFilter> filters; // One Kalman filter per sensor location
+    std::unordered_map<std::string, std::array<OneDKalmanFilter, 3>> filters;
 
-    // Initialize filters for each sensor location
-    for (const auto &data : imu_data) {
-        if (filters.find(data.location) == filters.end()) {
-            filters[data.location] = KalmanFilter(3, 3);
-            filters[data.location].initialize();
-            filters[data.location].x = data.measurement; // Initialize with first measurement
-        }
-    }
-
-    // Open a file to log differences before/after filtering
     std::ofstream diff_file("filtered_differences.txt");
     if (!diff_file.is_open()) {
         std::cerr << "Failed to open filtered_differences.txt" << std::endl;
         return;
     }
 
-    // Apply the corresponding Kalman filter to each sensor's data
     for (auto &data : imu_data) {
-        KalmanFilter &kf = filters[data.location]; // Get the correct filter
+        auto &filter_array = filters[data.location];
 
-        Eigen::VectorXd prev_measurement = data.measurement; // Store before filtering
-        data.measurement = kf.filter(data.measurement); // Apply Kalman filter
+        // If not initialized yet, construct filters with initial values
+        if (filter_array[0].update(0) == 0.0 && filter_array[1].update(0) == 0.0 && filter_array[2].update(0) == 0.0) {
+            filter_array[0] = OneDKalmanFilter(0.01, 1.0, data.measurement(0));
+            filter_array[1] = OneDKalmanFilter(0.01, 1.0, data.measurement(1));
+            filter_array[2] = OneDKalmanFilter(0.01, 1.0, data.measurement(2));
+        }
 
-        // Log differences
+        Eigen::VectorXd prev = data.measurement;
+
+        data.measurement(0) = filter_array[0].update(data.measurement(0));
+        data.measurement(1) = filter_array[1].update(data.measurement(1));
+        data.measurement(2) = filter_array[2].update(data.measurement(2));
+
         diff_file << "Sensor: " << data.location << "\n";
         diff_file << "Timestamp: " << data.timestamp << "\n";
-        diff_file << "Before filtering: H=" << prev_measurement(0)
-                  << ", P=" << prev_measurement(1)
-                  << ", R=" << prev_measurement(2) << "\n";
+        diff_file << "Before filtering: H=" << prev(0)
+                  << ", P=" << prev(1)
+                  << ", R=" << prev(2) << "\n";
         diff_file << "After filtering:  H=" << data.measurement(0)
                   << ", P=" << data.measurement(1)
                   << ", R=" << data.measurement(2) << "\n\n";
@@ -113,15 +114,13 @@ void save_filtered_data(const std::vector<IMUData> &imu_data, const std::string 
     while (std::getline(original_file, line)) {
         json entry = json::parse(line);
         json filtered_entry;
-        filtered_entry["timestamp"] = entry["timestamp"]; // Keep original timestamp
+        filtered_entry["timestamp"] = entry["timestamp"];
         filtered_entry["sensors"] = json::array();
 
         for (size_t i = 0; i < entry["sensors"].size(); ++i) {
             json sensor = entry["sensors"][i];
 
-            // Find corresponding sensor data in imu_data
             if (index < imu_data.size() && imu_data[index].location == sensor["location"]) {
-                // Replace Euler angles with the filtered values
                 sensor["euler"]["heading"] = imu_data[index].measurement(0);
                 sensor["euler"]["pitch"] = imu_data[index].measurement(1);
                 sensor["euler"]["roll"] = imu_data[index].measurement(2);
