@@ -11,7 +11,9 @@ SRC = \
     FSM_general_controller/State.cpp \
     FSM_general_controller/Sensor.cpp \
     Joint_Estimator/JointEstimator.cpp \
-    Torque_Controller/TorqueController.cpp
+    Torque_Controller/TorqueController.cpp \
+    FSM_general_controller/StateParameters.cpp \
+    FSM_general_controller/Timer.cpp
 
 INCLUDES = -IFSM_general_controller -IJoint_Estimator -ITorque_Controller
 

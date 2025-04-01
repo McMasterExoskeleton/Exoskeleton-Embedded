@@ -2,6 +2,7 @@
 #define ACTIVE_STATE_H
 
 #include "State.h"
+#include "Sensor.h"
 
 class ActiveState : public State
 {
