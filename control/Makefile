@@ -11,9 +11,10 @@ SRC = \
     FSM_general_controller/State.cpp \
     FSM_general_controller/Sensor.cpp \
     Joint_Estimator/JointEstimator.cpp \
-    Torque_Controller/TorqueController.cpp
+    Torque_Controller/TorqueController.cpp \
+	IMU_DataLoader/IMUDataLoader.cpp
 
-INCLUDES = -IFSM_general_controller -IJoint_Estimator -ITorque_Controller
+INCLUDES = -IFSM_general_controller -IJoint_Estimator -ITorque_Controller -IIMU_DataLoader
 
 all: $(TARGET)
 
