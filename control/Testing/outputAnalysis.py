@@ -10,7 +10,7 @@ csv_path = os.path.join(script_dir, "log_output.csv")
 df = pd.read_csv(csv_path)
 
 # Skip the first 200ms of data to avoid the initial spike
-df = df[df["time"] > 0.2].reset_index(drop=True)
+df = df[df["time"] > 1].reset_index(drop=True)
 
 # Hip Figure
 fig_hip, axs_hip = plt.subplots(4, 1, figsize=(10, 8))

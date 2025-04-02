@@ -2,6 +2,9 @@
 #include <iostream>
 #include "../Joint_Estimator/JointEstimator.h"
 #include "../Torque_Controller/TorqueController.h"
+#include "../IMU_DataLoader/IMUDataLoader.h"
+
+#include <iostream>
 #include <cmath>
 #include <chrono>
 #include <thread>
@@ -13,6 +16,8 @@
 #define MAX_KNEE_ANGLE 130.0
 #define MAX_HIP_ANGLE 120
 #define MIN_HIP_ANGLE -30
+
+using namespace IMUDataLoader;
 
 // Constructor
 ActiveState::ActiveState()
@@ -34,13 +39,23 @@ void ActiveState::update()
 {
 
     TorqueController::ModelParameters params = StateParameters::initializeModelParams(); // moved to stateparameters file
-
-    double dt = 0.01; // 10 ms loop
-    double t = 0.0;
-
     TorqueController controller(params);
-    JointEstimator hip_estimator(dt);
-    JointEstimator knee_estimator(dt);
+
+    // Load IMU Data
+    JointData knee_data = loadJointData("joint_data.json", "Right Knee");
+    const std::vector<double>& timestamps = knee_data.timestamps;
+    const std::vector<double>& knee_angles = knee_data.angles_rad;
+
+    // These variables are only for testing purposes
+    // We want to see how the coriolis and gravity term affect the torque output
+    double hip_m_acc, hip_c_vel, hip_g;
+    double knee_m_acc, knee_c_vel, knee_g;
+
+    JointEstimator hip_estimator;
+    JointEstimator knee_estimator;
+
+    hip_estimator.prime((10.0 * M_PI / 180.0) * std::sin(2 * M_PI * 1.0 * timestamps[0]));
+    knee_estimator.prime(knee_angles[0]);
 
     // Setup logging
     std::ofstream log("Testing/log_output.csv");
@@ -49,39 +64,32 @@ void ActiveState::update()
            "knee_angle,knee_velocity,knee_acceleration,"
            "knee_m_acc,knee_c_vel,knee_g,knee_torque\n";
     /////////////////////////////////////////////////////////////////////////////
-
-    // retreive timer pointer
-    Timer *timer = Timer::instance();
-    timer->Reset();
-
-    while (true)
+    for (size_t i = 1; i < knee_angles.size(); ++i) 
     {
+        double t = timestamps[i];
+        double dt = timestamps[i] - timestamps[i - 1];
+      
+        // retreive timer pointer
+        Timer *timer = Timer::instance();
+        timer->Reset();
 
         // Run simulation for 10 seconds for testing purposes (TODO: maybe create a non-blocking keyboard interrupt to change states)
-        if (t >= 10.0)
-        {
-            std::cout << "Finished 10-second test.\n";
+        if (t >= 120.0) {
+            std::cout << "Finished 120-second test.\n";
             leave();
             current = idle;
             return;
         }
-
         timer->Tick(); // time measurement
 
         // Simulated joint angles (TODO: replace with AI later)
         // make sure angle is in RADIANS!!
-
         double hip_angle = (10.0 * M_PI / 180.0) * std::sin(2 * M_PI * 1.0 * t);
-        double knee_angle = (30.0 * M_PI / 180.0) * std::sin(2 * M_PI * 1.0 * t + M_PI / 4);
-
-        // These variables are only for testing purposes
-        // We want to see how the coriolis and gravity term affect the torque output
-        double hip_m_acc, hip_c_vel, hip_g;
-        double knee_m_acc, knee_c_vel, knee_g;
+        double knee_angle = knee_angles[i];
 
         // Update speed, acceleration estimator
-        hip_estimator.update(hip_angle);
-        knee_estimator.update(knee_angle);
+        hip_estimator.update(hip_angle, dt);
+        knee_estimator.update(knee_angle, dt);
 
         TorqueController::JointState hip = {
             .angle = hip_angle,
@@ -113,7 +121,6 @@ void ActiveState::update()
         }
 
         // idle state
-
         if (knee_torque < Sensor::getMinSensorReading() && hip_torque < Sensor::getMinSensorReading())
         {
             timer->Tick(); // time measurement
@@ -134,7 +141,7 @@ void ActiveState::update()
         }
 
         // Output to console for now (TODO: replace with motor command)
-        std::cout << "Hip Torque: " << hip_torque << "\tKnee Torque: " << knee_torque << "\n";
+        std::cout << "Time: " << t << "\tHip Torque: " << hip_torque << "\tKnee Torque: " << knee_torque << "\n";
 
         // Log to CSV
         log << t << ","
@@ -142,9 +149,8 @@ void ActiveState::update()
             << hip_m_acc << "," << hip_c_vel << "," << hip_g << "," << hip_torque << ","
             << knee.angle << "," << knee.velocity << "," << knee.acceleration << ","
             << knee_m_acc << "," << knee_c_vel << "," << knee_g << "," << knee_torque << "\n";
-
-        t += dt;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        
+        std::this_thread::sleep_for(std::chrono::duration<double>(dt));
     }
 }
 
