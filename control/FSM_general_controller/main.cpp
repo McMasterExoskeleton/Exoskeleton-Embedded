@@ -17,8 +17,8 @@ State *State::current = State::idle;
 
 int main(int argc, char **argv)
 {
-  double max_sensor_reading = 0;
-  double min_sensor_reading = 0;
+  double max_sensor_reading = 1000; // accurate sensor values to be determined
+  double min_sensor_reading = -1000;
 
   /*
 
