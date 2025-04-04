@@ -10,7 +10,7 @@ csv_path = os.path.join(script_dir, "log_output.csv")
 df = pd.read_csv(csv_path)
 
 # Skip the first 200ms of data to avoid the initial spike
-df = df[df["time"] > 1].reset_index(drop=True)
+#df = df[df["time"] > 1].reset_index(drop=True)
 
 # Hip Figure
 fig_hip, axs_hip = plt.subplots(4, 1, figsize=(10, 8))
@@ -91,6 +91,14 @@ axs_torque[1].set_ylabel("Nm")
 axs_torque[1].set_xlabel("Time (s)")
 axs_torque[1].legend()
 axs_torque[1].grid(True)
+
+fig_scaled, ax_scaled = plt.subplots(figsize=(10, 4))
+ax_scaled.plot(df["time"], df["knee_scaled_torque"], label="Scaled Torque to Motor", color="brown")
+ax_scaled.set_title("Commanded Motor Torque (Scaled)")
+ax_scaled.set_ylabel("Nm")
+ax_scaled.set_xlabel("Time (s)")
+ax_scaled.grid(True)
+ax_scaled.legend()
 
 fig_torque.tight_layout(rect=[0, 0.03, 1, 0.95])
 

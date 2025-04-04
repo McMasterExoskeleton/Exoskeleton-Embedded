@@ -17,7 +17,7 @@ JointEstimator::JointEstimator()
 
 void JointEstimator::update(double current_angle, double dt) {
 
-    if (dt <= 0.015) return; // skip super fast samples
+    if (dt <= 0.005) return; // skip super fast samples
     
     if (first_update) {
         velocity = 0.0;
