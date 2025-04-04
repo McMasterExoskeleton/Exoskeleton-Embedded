@@ -14,14 +14,15 @@ SRC = \
     Torque_Controller/TorqueController.cpp \
 	IMU_DataLoader/IMUDataLoader.cpp \
     FSM_general_controller/StateParameters.cpp \
-    FSM_general_controller/Timer.cpp 
+    FSM_general_controller/Timer.cpp \
+	../motors/motor_api.cpp
 
-INCLUDES = -IFSM_general_controller -IJoint_Estimator -ITorque_Controller -IIMU_DataLoader
+INCLUDES = -IFSM_general_controller -IJoint_Estimator -ITorque_Controller -IIMU_DataLoader -I../motors
 
 all: $(TARGET)
 
 $(TARGET):
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(SRC) -o $(TARGET)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(SRC) -o $(TARGET) -lmodbus
 
 run: $(TARGET)
 	./$(TARGET)
