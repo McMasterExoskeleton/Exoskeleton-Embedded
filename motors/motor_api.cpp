@@ -98,6 +98,45 @@ bool Motor::readRegister32(uint16_t start_addr, int32_t &out) {
     return true;
 }
 
+// // Write rated current in milliamps
+// bool Motor::setRatedCurrent(uint32_t current_mA) {
+//     return writeRegister32(REG_RATED_CURRENT, current_mA);
+// }
+
+// // Read rated current in milliamps (mA)
+// uint32_t Motor::getRatedCurrent() {
+//     uint32_t current;
+//     if (!readRegister32(REG_RATED_CURRENT, current)) {
+//         return 0;  // or maybe return an error code if you prefer
+//     }
+//     return current;
+// }
+
+// Read raw current in ‰ (thousandths of rated torque)
+int16_t Motor::getActualCurrent() {
+    int16_t current;
+    if (!readRegister(REG_ACTUAL_CURRENT, current)) {
+        return 0;
+    }
+    return current;
+}
+
+// TODO: DOUBLE CHECK BELOW CONSTANTS
+// Get actual current in milliamps 
+double Motor::getActualCurrent_mA() {
+    int16_t current_per_mille = getActualCurrent_mA();
+
+    // Select rated torque based on motor model (update accordingly)
+    const double rated_torque = 0.64;  // for 200W motor. in Nm
+    const double torque_constant = 0.056;  // 56 mNm/A from user guide
+
+    // Convert current value from per-mille of rated torque to Nm
+    double actual_torque = (current_per_mille / 1000.0) * rated_torque;
+
+    double current_mA = actual_torque * 1000.0 / torque_constant;
+    return current_mA;
+}
+
 // Set motor position
 bool Motor::setPosition(int32_t position) {
     return writeRegister32(REG_TARGET_POSITION, position);
@@ -110,6 +149,13 @@ int32_t Motor::getActualPosition() {
         return 0;
     }
     return position;
+}
+
+// Get actual motor position in degrees
+double Motor::getDegrees(){
+    int32_t  actual_position_in_INC = Motor::getActualPosition();
+    double degrees = (actual_position_in_INC * 360.0) / 65536.0;
+    return degrees;
 }
 
 // Set motor target velocity

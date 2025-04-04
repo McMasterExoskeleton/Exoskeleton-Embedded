@@ -31,6 +31,11 @@ constexpr uint16_t REG_TRQ_SLOPE        = 0x6870;
 constexpr uint16_t REG_ACTUAL_TORQUE    = 0x6770;
 constexpr uint16_t REG_ACTUAL_VELOCITY  = 0x66C0;
 constexpr uint16_t REG_ACTUAL_POSITION  = 0x6640;
+constexpr uint16_t REG_ACTUAL_CURRENT   = 0x6780;
+
+constexpr uint16_t REG_RATED_CURRENT    = 0x2017;
+
+
 
 // ─────────────────────────────────────────────────────────────
 // Motor Class
@@ -56,7 +61,13 @@ public:
     int32_t getActualVelocity();
 
     bool setPosition(int32_t position);
-    int32_t n();
+    int32_t getActualPosition();
+    double Motor::getDegrees();
+
+    bool setRatedCurrent(uint32_t current_mA);
+    uint32_t getRatedCurrent();
+    int16_t getActualCurrent();
+    double getActualCurrent_mA();
 
     // Status
     int getStatus();
