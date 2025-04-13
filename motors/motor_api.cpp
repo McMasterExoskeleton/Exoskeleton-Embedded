@@ -48,7 +48,7 @@ bool Motor::writeRegister(uint16_t reg, uint16_t value) {
 }
 
 // Read a register
-bool Motor::readRegister(uint16_t reg, uint16_t value) {
+bool Motor::readRegister(uint16_t reg, uint16_t &value) {
     if (!connected) {
         std::cerr << "[readRegister] Not connected to motor.\n";
         return false;
@@ -184,7 +184,7 @@ bool Motor::setTargetTorque(int16_t torque_permille) {
 }
 
 // Get actual motor torque
-uint16_t Motor::getActualTorque() {
+int16_t Motor::getActualTorque() {
     uint16_t torque = 0;
     if (!readRegister(REG_ACTUAL_TORQUE, torque)) {
         return 0;
