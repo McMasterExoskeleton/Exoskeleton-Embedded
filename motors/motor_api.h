@@ -63,6 +63,7 @@ public:
     bool setPosition(int32_t position);
     int32_t getActualPosition();
     double getDegrees();
+    double getDegrees();
 
     bool setRatedCurrent(uint32_t current_mA);
     uint32_t getRatedCurrent();
@@ -70,6 +71,7 @@ public:
     double getActualCurrent_mA();
 
     // Status
+    uint16_t getStatus();
     uint16_t getStatus();
     bool isConnected() const { return connected; }
 
@@ -85,6 +87,7 @@ private:
 
     // For 32-bit register access
     bool writeRegister32(uint16_t start_addr, int32_t value);
+    bool readRegister32(uint16_t start_addr, int32_t &out);
     bool readRegister32(uint16_t start_addr, int32_t &out);
 };
 

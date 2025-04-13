@@ -48,7 +48,7 @@ bool Motor::writeRegister(uint16_t reg, uint16_t value) {
 }
 
 // Read a register
-bool Motor::readRegister(uint16_t reg, uint16_t &value) {
+bool Motor::readRegister(uint16_t reg, uint16_t value) {
     if (!connected) {
         std::cerr << "[readRegister] Not connected to motor.\n";
         return false;
@@ -124,7 +124,9 @@ int16_t Motor::getActualCurrent() {
 // TODO: DOUBLE CHECK BELOW CONSTANTS
 // Get actual current in milliamps 
 double Motor::getActualCurrent_mA() {
-    int16_t current_per_mille = getActualCurrent_mA();
+    // Ritvik: Current approach causes infinite reccursion
+    // I'm assuming this is a typo and getActualCurrent() was meant to be called
+    int16_t current_per_mille = getActualCurrent();
 
     // Select rated torque based on motor model (update accordingly)
     const double rated_torque = 0.64;  // for 200W motor. in Nm
@@ -182,8 +184,8 @@ bool Motor::setTargetTorque(int16_t torque_permille) {
 }
 
 // Get actual motor torque
-int16_t Motor::getActualTorque() {
-    uint16_t torque;
+uint16_t Motor::getActualTorque() {
+    uint16_t torque = 0;
     if (!readRegister(REG_ACTUAL_TORQUE, torque)) {
         return 0;
     }
@@ -206,7 +208,7 @@ bool Motor::setOperationMode(int16_t mode) {
 
 // Get motor status
 uint16_t Motor::getStatus() {
-    uint16_t status;
+    uint16_t status = 0;
     if (!readRegister(REG_CONTROL_WORD, status)) {
         return 0;
     }
