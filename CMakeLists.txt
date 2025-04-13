@@ -16,11 +16,14 @@ add_library(motor_api
     motors/motor_api.cpp
 )
 target_include_directories(motor_api PUBLIC motors)
+target_link_libraries(motor_api PRIVATE modbus)
 
 # Add test for motor API
 add_executable(motor_api_test
     tests/motor_api_test.cpp
 )
+
+target_include_directories(motor_api_test PRIVATE motors)
 target_link_libraries(motor_api_test
     motor_api
     gtest

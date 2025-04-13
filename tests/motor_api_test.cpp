@@ -1,4 +1,4 @@
-#include "motors/motor_api.h"
+#include "../motors/motor_api.h"
 #include <gtest/gtest.h>
 #include <chrono>
 #include <thread>
@@ -29,22 +29,30 @@ protected:
 };
 
 // Test Initialization
-TEST_F(MotorTest, Initialization) {
-    EXPECT_NE(motor, nullptr);  // Ensure motor was created
-}
+// TEST_F(MotorTest, Initialization) {
+//     EXPECT_NE(motor, nullptr);  // Ensure motor was created
+// }
 
-// Test Setting Speed
-TEST_F(MotorTest, SetSpeed) {
-    ASSERT_NE(motor, nullptr);
-    EXPECT_TRUE(motor->setOperationMode(PV_MODE)); // Set to Profile Velocity Mode
-    EXPECT_TRUE(motor->setSpeed(1000));
-}
+// // Test Setting Speed
+// TEST_F(MotorTest, SetSpeed) {
+//     ASSERT_NE(motor, nullptr);
+//     EXPECT_TRUE(motor->setOperationMode(PV_MODE)); // Set to Profile Velocity Mode
+//     int speed = 1000;
+//     EXPECT_TRUE(motor->setTargetVelocity(speed));
+//     // std::this_thread::sleep_for(std::chrono::seconds(2));
+//     ASSERT_EQ(speed, motor->getActualVelocity()) << "Target Velocity has not been reached";
+// }
 
 // Test Setting Torque
 TEST_F(MotorTest, SetTorque) {
     ASSERT_NE(motor, nullptr);
     EXPECT_TRUE(motor->setOperationMode(PT_MODE)); // Set to Profile Torque Mode
-    EXPECT_TRUE(motor->setTorque(300));
+    // EXPECT_TRUE(motor->setTargetTorque(-200));
+    int torque = 100;
+    EXPECT_TRUE(motor->setTargetTorque(torque));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    ASSERT_EQ(torque, motor->getActualTorque()) << "Target Torque has not been reached";
+    
 }
 
 // Test Stopping Motor

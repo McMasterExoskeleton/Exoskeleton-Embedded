@@ -114,11 +114,11 @@ bool Motor::readRegister32(uint16_t start_addr, int32_t &out) {
 
 // Read raw current in ‰ (thousandths of rated torque)
 int16_t Motor::getActualCurrent() {
-    int16_t current;
-    if (!readRegister(REG_ACTUAL_CURRENT, current)) {
+    uint16_t raw_current;
+    if (!readRegister(REG_ACTUAL_CURRENT, raw_current)) {
         return 0;
     }
-    return current;
+    return static_cast<int16_t>(raw_current);  // safe cast to signed
 }
 
 // TODO: DOUBLE CHECK BELOW CONSTANTS

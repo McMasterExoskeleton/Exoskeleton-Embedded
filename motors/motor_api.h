@@ -53,16 +53,16 @@ public:
     bool setOperationMode(int16_t mode);
     bool stopMotor();
 
-    bool setMaxTorque(int torque);
+    bool setMaxTorque(uint16_t max_torque);
     bool setTargetTorque(int16_t torque_permille);
-    uint16_t  getActualTorque();
+    int16_t  getActualTorque();
 
     bool setTargetVelocity(int32_t velocity);
     int32_t getActualVelocity();
 
     bool setPosition(int32_t position);
     int32_t getActualPosition();
-    double Motor::getDegrees();
+    double getDegrees();
 
     bool setRatedCurrent(uint32_t current_mA);
     uint32_t getRatedCurrent();
@@ -70,7 +70,7 @@ public:
     double getActualCurrent_mA();
 
     // Status
-    int getStatus();
+    uint16_t getStatus();
     bool isConnected() const { return connected; }
 
 private:
@@ -81,11 +81,11 @@ private:
 
     // Register Access Helpers
     bool writeRegister(uint16_t reg, uint16_t value);
-    bool  readRegister(uint16_t reg);
+    bool readRegister(uint16_t reg, uint16_t &value);
 
     // For 32-bit register access
     bool writeRegister32(uint16_t start_addr, int32_t value);
-    bool readRegister32(uint16_t start_addr);
+    bool readRegister32(uint16_t start_addr, int32_t &out);
 };
 
 #endif // MOTOR_API_H
