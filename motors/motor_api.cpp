@@ -64,6 +64,30 @@ bool Motor::readRegister(uint16_t reg, uint16_t &value) {
     return true;
 }
 
+void Motor::logErrorStatus() {
+    uint16_t error_status = 0;
+    if (!readRegister(REG_ERROR_STATUS, error_status)) {
+        std::cerr << "Failed to read Error Status register.\n";
+        return;
+    }
+
+    std::cout << "=== Motor Error Status (0x20BA) ===\n";
+    if (error_status == 0) {
+        std::cout << "No errors detected.\n";
+        return;
+    }
+
+    if (error_status & (1 << 0)) std::cout << "OCP: Over-current protection triggered.\n";
+    if (error_status & (1 << 1)) std::cout << "UVLO: Under-voltage lockout triggered.\n";
+    if (error_status & (1 << 2)) std::cout << "LOCK: Rotor lock detected.\n";
+    if (error_status & (1 << 3)) std::cout << "VIN_LIMIT: DC link voltage protection active.\n";
+    if (error_status & (1 << 4)) std::cout << "OVERLOAD: Overload protection triggered.\n";
+    if (error_status & (1 << 5)) std::cout << "POS_LIMIT: Position limit exceeded.\n";
+    if (error_status & (1 << 6)) std::cout << "SENSOR_ERR: Position sensor error.\n";
+    std::cout << "====================================\n";
+}
+
+
 // Write to a register of data type INT32
 bool Motor::writeRegister32(uint16_t start_addr, int32_t value) {
     if (!connected) return false;
@@ -111,6 +135,45 @@ bool Motor::readRegister32(uint16_t start_addr, int32_t &out) {
 //     }
 //     return current;
 // }
+
+
+bool Motor::setMotorAdrress(uint16_t adr){
+    return writeRegister(REG_MODBUS_ADDRESS, adr);
+}
+
+bool Motor::getMotorAddress(uint16_t &adr){
+    uint16_t address = 0;
+    if (!readRegister(REG_MODBUS_ADDRESS, address)) {
+        return false;  // or maybe return an error code if you prefer
+    }
+    adr = address;
+    return true;
+}
+
+bool Motor::storeParameters(){
+    return writeRegister32(REG_RELATED_REGISTERS, STORE_PARAMETERS);
+}
+
+bool Motor::updateControlParameters(){
+    return writeRegister32(REG_RELATED_REGISTERS, UPDATE_CONTROL_PARAMETERS);
+}
+
+bool Motor::restoreDefaultParameters(){
+    return writeRegister32(REG_RELATED_REGISTERS, RESTORE_DEFAULT_PARAMETERS);
+}
+
+bool Motor::systemReset(){
+    return writeRegister32(REG_RELATED_REGISTERS, SYSTEM_RESET);
+}
+
+void Motor::printMotorAddress() {
+    uint16_t address = 0;
+    if (getMotorAddress(address)) {
+        std::cout << "Motor on " << device << " has address: " << address << std::endl;
+    } else {
+        std::cerr << "Failed to retrieve motor address for " << device << std::endl;
+    }
+}
 
 // Read raw current in ‰ (thousandths of rated torque)
 int16_t Motor::getActualCurrent() {
@@ -215,19 +278,25 @@ uint16_t Motor::getStatus() {
     return status;
 }
 
+
+
 // Stop motor
 bool Motor::stopMotor() {
     return writeRegister(REG_CONTROL_WORD, OPERATION_DISABLE);
 }
 
 // Disconnect motor
-void Motor::disconnectMotor() {
-    if (!connected) return;    
-    stopMotor();
-    modbus_close(ctx);
-    modbus_free(ctx);
-    ctx = nullptr;
-    connected = false;
+bool Motor::disconnectMotor() {
+    std::cout << "Disconnecting motor on " << device << " (ID: " << slave_id << ")\n";
+    if (connected) {
+        stopMotor();
+        modbus_close(ctx);
+        modbus_free(ctx);
+        ctx = nullptr;
+        connected = false;
+        return true;
+    }
+    return false;
 }
 
 // Destructor

@@ -34,7 +34,16 @@ constexpr uint16_t REG_ACTUAL_POSITION  = 0x6640;
 constexpr uint16_t REG_ACTUAL_CURRENT   = 0x6780;
 
 constexpr uint16_t REG_RATED_CURRENT    = 0x2017;
+constexpr uint16_t REG_MODBUS_ADDRESS   = 0x3050;
 
+constexpr uint32_t STORE_PARAMETERS = 0x65766173;
+constexpr uint32_t UPDATE_CONTROL_PARAMETERS = 0xAA5555AA;
+constexpr uint32_t SYSTEM_RESET = 0x626F6F74;
+constexpr uint32_t RESTORE_DEFAULT_PARAMETERS = 0x626F6F74;
+
+constexpr uint16_t REG_RELATED_REGISTERS= 0x20D0;
+
+constexpr uint16_t REG_ERROR_STATUS= 0x20BA;
 
 
 // ─────────────────────────────────────────────────────────────
@@ -47,7 +56,7 @@ public:
 
     // Initialization
     bool initializeMotor();
-    void disconnectMotor();
+    bool disconnectMotor();
 
     // Motor Control
     bool setOperationMode(int16_t mode);
@@ -64,13 +73,23 @@ public:
     int32_t getActualPosition();
     double getDegrees();
 
-    bool setRatedCurrent(uint32_t current_mA);
-    uint32_t getRatedCurrent();
+    // bool setRatedCurrent(uint32_t current_mA);
+    // uint32_t getRatedCurrent();
     int16_t getActualCurrent();
     double getActualCurrent_mA();
 
+    bool setMotorAdrress(uint16_t adr);
+    bool getMotorAddress(uint16_t &adr);
+    void printMotorAddress(); 
+
+    bool storeParameters();
+    bool updateControlParameters();
+    bool restoreDefaultParameters();
+    bool systemReset();
+
     // Status
     uint16_t getStatus();
+    void logErrorStatus();
     bool isConnected() const { return connected; }
 
 private:
