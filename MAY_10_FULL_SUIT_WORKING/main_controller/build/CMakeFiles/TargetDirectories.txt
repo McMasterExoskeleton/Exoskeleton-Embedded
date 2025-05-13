@@ -1,0 +1,3 @@
+/home/dylan-exo/control_system/main_controller/build/CMakeFiles/main_controller.dir
+/home/dylan-exo/control_system/main_controller/build/CMakeFiles/edit_cache.dir
+/home/dylan-exo/control_system/main_controller/build/CMakeFiles/rebuild_cache.dir
