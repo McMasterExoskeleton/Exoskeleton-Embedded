@@ -1,2 +1,0 @@
-/usr/bin/ar qc libmotor_api.a CMakeFiles/motor_api.dir/motors/motor_api.cpp.o
-/usr/bin/ranlib libmotor_api.a

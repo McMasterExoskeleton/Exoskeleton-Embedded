@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/motor_api_test.dir/tests/motor_api_test.cpp.o -o motor_api_test  libmotor_api.a lib/libgtest.a lib/libgtest_main.a -lmodbus lib/libgtest.a 
