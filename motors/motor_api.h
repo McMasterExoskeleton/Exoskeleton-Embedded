@@ -101,7 +101,6 @@ public:
     bool isConnected() const { return connected; }
     bool clearError();
 
-    bool set_OTP_Threshold(int16_t temperature_C);
 
 private:
     std::string device;
