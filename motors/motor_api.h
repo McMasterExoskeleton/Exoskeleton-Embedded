@@ -45,6 +45,9 @@ constexpr uint16_t REG_RELATED_REGISTERS= 0x20D0;
 
 constexpr uint16_t REG_ERROR_STATUS= 0x20BA;
 
+constexpr uint16_t REG_TEMPERATURE= 0x2400; //Indicates the PCB’s temperature
+constexpr uint16_t REG_OTP_THRESHOLD= 0x2410;  //Sets the over-temperature protection (OTP) threshold
+
 
 // ─────────────────────────────────────────────────────────────
 // Motor Class
@@ -74,13 +77,18 @@ public:
     double getDegrees();
 
     // bool setRatedCurrent(uint32_t current_mA);
-    // uint32_t getRatedCurrent();
+    uint32_t getRatedCurrent();
     int16_t getActualCurrent();
     double getActualCurrent_mA();
 
     bool setMotorAdrress(uint16_t adr);
     bool getMotorAddress(uint16_t &adr);
     void printMotorAddress(); 
+
+    bool getMotorTemperature(int16_t &temperature_C);
+    void printMotorTemperature();
+    bool setOTPThreshold(int16_t temperature_C);
+
 
     bool storeParameters();
     bool updateControlParameters();
@@ -91,6 +99,9 @@ public:
     uint16_t getStatus();
     void logErrorStatus();
     bool isConnected() const { return connected; }
+    bool clearError();
+
+    bool set_OTP_Threshold(int16_t temperature_C);
 
 private:
     std::string device;

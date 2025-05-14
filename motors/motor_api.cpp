@@ -8,6 +8,7 @@
  *    - Amazing Reference guide 
 */
 #include "motor_api.h"
+#include <thread>
 
 Motor::Motor(const std::string& dev, int id) : device(dev), slave_id(id), ctx(nullptr), connected(false) {}
 
@@ -30,9 +31,11 @@ bool Motor::initializeMotor() {
     }
     connected = true;
     std::cout << "Connected to motor on " << device << " (ID: " << slave_id << ")\n";
-
+    clearError();
+    writeRegister(REG_CONTROL_WORD, OPERATION_ENABLE);
+    setOperationMode(PT_MODE);
     setMaxTorque(3000);
-    writeRegister(REG_CONTROL_WORD, OPERATION_ENABLE); // Enable motor on startup
+     // Enable motor on startup
 
     return true;
 }
@@ -102,6 +105,20 @@ bool Motor::writeRegister32(uint16_t start_addr, int32_t value) {
     }
     return true;
 }
+bool Motor::clearError() {
+    // Step 1: Make sure bit 7 has a falling edge first
+    if (!writeRegister(REG_CONTROL_WORD, 0x0000)) return false;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    // Step 2: Write 0x0080 to trigger fault reset
+    if (!writeRegister(REG_CONTROL_WORD, 0x0080)) return false;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    // Step 3: Shutdown command (get to "Ready to switch on")
+    if (!writeRegister(REG_CONTROL_WORD, 0x0006)) return false;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    return true;
+}
 
 // Read a register of data type INT32
 bool Motor::readRegister32(uint16_t start_addr, int32_t &out) {
@@ -122,19 +139,11 @@ bool Motor::readRegister32(uint16_t start_addr, int32_t &out) {
     return true;
 }
 
-// // Write rated current in milliamps
-// bool Motor::setRatedCurrent(uint32_t current_mA) {
-//     return writeRegister32(REG_RATED_CURRENT, current_mA);
-// }
 
-// // Read rated current in milliamps (mA)
-// uint32_t Motor::getRatedCurrent() {
-//     uint32_t current;
-//     if (!readRegister32(REG_RATED_CURRENT, current)) {
-//         return 0;  // or maybe return an error code if you prefer
-//     }
-//     return current;
-// }
+bool Motor::setOTPThreshold(int16_t temperature_C){
+    return writeRegister(REG_OTP_THRESHOLD, temperature_C);
+}
+
 
 
 bool Motor::setMotorAdrress(uint16_t adr){
@@ -144,9 +153,18 @@ bool Motor::setMotorAdrress(uint16_t adr){
 bool Motor::getMotorAddress(uint16_t &adr){
     uint16_t address = 0;
     if (!readRegister(REG_MODBUS_ADDRESS, address)) {
-        return false;  // or maybe return an error code if you prefer
+        return false; 
     }
     adr = address;
+    return true;
+}
+
+bool Motor::getMotorTemperature(int16_t &temperature_C){
+    int16_t temp = 0;
+    if (!readRegister(REG_TEMPERATURE, temp)) {
+        return false;  
+    }
+    temperature_C = temp;
     return true;
 }
 
@@ -172,6 +190,15 @@ void Motor::printMotorAddress() {
         std::cout << "Motor on " << device << " has address: " << address << std::endl;
     } else {
         std::cerr << "Failed to retrieve motor address for " << device << std::endl;
+    }
+}
+
+void Motor::printMotorTemperature() {
+    int16_t temperature = 0;
+    if (getMotorTemperature(temperature)) {
+        std::cout << "Motor on " << device << " has temperature: " << temperature << "°C" << std::endl;
+    } else {
+        std::cerr << "Failed to retrieve motor temperature for " << device << std::endl;
     }
 }
 
@@ -243,7 +270,8 @@ bool Motor::setTargetTorque(int16_t torque_permille) {
         std::cerr << "Torque value " << torque_permille << "‰ out of range [-3000, 3000]\n";
         return false;
     }
-    return writeRegister(REG_TARGET_TORQUE, static_cast<uint16_t>(torque_permille));
+    uint16_t raw = static_cast<uint16_t>(*reinterpret_cast<uint16_t*>(&torque_permille));
+    return writeRegister(REG_TARGET_TORQUE, raw);
 }
 
 // Get actual motor torque
