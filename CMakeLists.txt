@@ -1,21 +1,35 @@
 cmake_minimum_required(VERSION 3.14)
-project(MyProject)
+project(ExoskeletonFirmware)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
-
-# Add source files
-# add_library(MyLibrary src/my_library.cpp)
-
-# Include GoogleTest
-add_subdirectory(googletest)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Enable testing
 enable_testing()
 
-# Add unit tests
-add_executable(sampleTest tests/sample_test.cpp)
-target_link_libraries(sampleTest PRIVATE gtest gtest_main)
+# Add googletest
+add_subdirectory(googletest)
 
-# Register the test with CTest
-add_test(NAME sampleTest COMMAND sampleTest)
+# Motor API library
+add_library(motor_api
+    motors/motor_api.cpp
+)
+target_include_directories(motor_api PUBLIC motors)
+target_link_libraries(motor_api PRIVATE modbus)
+
+# Add test for motor API
+add_executable(motor_api_test
+    tests/motor_api_test.cpp
+)
+
+target_include_directories(motor_api_test PRIVATE motors)
+target_link_libraries(motor_api_test
+    motor_api
+    gtest
+    gtest_main
+)
+
+add_test(NAME MotorAPITest COMMAND motor_api_test)
+
+# add more components later (sensors, control, etc.)
